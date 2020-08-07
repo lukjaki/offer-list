@@ -1,0 +1,1 @@
+export { default as OffersLayout } from './Offers';

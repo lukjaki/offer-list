@@ -1,0 +1,149 @@
+swagger: '2.0'
+info:
+  title: 'Travelist app'
+  version: '1.0'
+
+basePath: '/v1'
+schemes:
+- 'http'
+
+tags:
+  - name: 'offer'
+    description: 'Offers operations'
+
+definitions:
+  Offer:
+    type: object
+    required:
+      - id
+      - title
+      - description
+      - img_url
+      - price
+      - status
+      - created_at
+    properties:
+      id:
+        type: integer
+        format: int64
+      title:
+        type: string
+        maxLength: 255
+      description:
+        type: string
+        maxLength: 1024
+      img_url:
+        type: string
+        maxLength: 1024
+      price:
+        type: integer
+        format: 'int32'
+        minimum: 1
+        maximum: 1000
+      discount:
+        type: integer
+        format: 'int32'
+        minimum: 1
+        maximum: 99
+      rating:
+        type: integer
+        format: 'int32'
+        minimum: 1
+        maximum: 5
+      status:
+        type: string
+        enum: &offerStatusEnum
+          - 'published'
+          - 'in_progress'
+          - 'waiting_for_approval'
+          - 'canceled'
+      created_at:
+        type: string
+        format: date-time  
+        
+
+paths:
+  /offers:
+    get:
+      summary: 'Get list of all offers'
+      tags:
+        - 'offer'
+      security:
+        - oath:
+          - "read:offer" 
+      produces:
+        - 'application/json'
+      parameters:
+        - name: 'limit'
+          in: 'query'
+          type: 'integer'
+          minimum: 1
+          default: 20
+          maximum: 50
+        - name: 'offset'
+          in: 'query'
+          type: 'integer'
+          minimum: 0
+        - name: 'sort'
+          in: 'query'
+          type: 'string'
+          default: 'id'
+          enum:
+            - 'id'
+            - '-id'
+            - 'title'
+            - '-title'
+            - 'price'
+            - '-price'
+            - 'discount'
+            - '-discount'
+        - name: 'title'
+          in: 'query'
+          type: 'string'
+          description: 'Filter for query by title'    
+        - name: 'status'
+          in: 'query'
+          description: 'Filter for query by status'
+          type: 'string'
+          enum: *offerStatusEnum    
+      responses:
+        200:
+          description: 'Successful response'
+          schema:
+            type: 'array'
+            minItems: 10
+            items:
+              $ref: '#/definitions/Offer'
+          headers:
+            X-Limit: &XLimit
+              type: 'integer'
+              minimum: 10
+              description: "Limit of results used in query"
+            X-Offset: &XOffset
+              type: 'integer'
+              minimum: 0
+              description: "Offset of results used in query"
+            X-Total-Count: &XTotalCount
+              type: 'integer'
+              minimum: 0
+              description: "Total records"
+              
+  /offers/{offer_id}:
+    get:
+      summary: 'Get offer data in json format'
+      tags:
+        - 'offer'
+      produces:
+        - 'application/json'
+      parameters:
+        - name: 'offer_id'
+          in: 'path'
+          type: 'integer'
+          required: true
+      responses:
+        200:
+          description: 'Successful response'
+          schema:
+            $ref: '#/definitions/Offer'
+        404:
+          description: 'Invalid id'
